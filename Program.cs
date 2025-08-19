@@ -18,7 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 //AutoMapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 var app = builder.Build();

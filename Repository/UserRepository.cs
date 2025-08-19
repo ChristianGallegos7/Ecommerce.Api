@@ -28,15 +28,30 @@ namespace Ecommerce.Api.Repository
         {
             return _db.Users.Any(u => u.Name.ToLower().Trim() == name.ToLower().Trim());
         }
+        // Asegúrate de instalar el paquete BCrypt.Net-Next:
+        // 
+
+        public async Task<User> Register(CreateUserDto createUserDto)
+        {
+            var hashPassword = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
+
+            var user = new User
+            {
+                Username = createUserDto.Username,
+                Name = createUserDto.Name,
+                Password = hashPassword,
+                Role = createUserDto.Role,
+            };
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+            return user;
+        }
 
         public Task<UserLoginResponseDto> Login(UserLoginDto userLoginDto)
         {
             throw new NotImplementedException();
         }
 
-        public Task<User> Register(CreateUserDto createUserDto)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -171,3 +171,4 @@ C:\Users\cgallegos\source\repos\Ecommerce.Api\obj\Debug\net8.0\refint\Ecommerce.
 C:\Users\cgallegos\source\repos\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.pdb
 C:\Users\cgallegos\source\repos\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.genruntimeconfig.cache
 C:\Users\cgallegos\source\repos\Ecommerce.Api\obj\Debug\net8.0\ref\Ecommerce.Api.dll
+C:\Users\cgallegos\source\repos\Ecommerce.Api\bin\Debug\net8.0\BCrypt.Net-Next.dll

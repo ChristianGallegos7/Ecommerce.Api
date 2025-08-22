@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Ecommerce.Api.Data;
 using Ecommerce.Api.Models;
 using Ecommerce.Api.Models.Dtos;
 using Ecommerce.Api.Repository.IRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Ecommerce.Api.Repository
 {
@@ -13,6 +18,13 @@ namespace Ecommerce.Api.Repository
     {
 
         private readonly ApplicationDbContext _db;
+        private string? secretKey;
+
+        public UserRepository(ApplicationDbContext db, IConfiguration configuration)
+        {
+            _db = db;
+            secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
+        }
 
         public User GetUser(int id)
         {
@@ -28,8 +40,7 @@ namespace Ecommerce.Api.Repository
         {
             return _db.Users.Any(u => u.Name.ToLower().Trim() == name.ToLower().Trim());
         }
-        // Asegúrate de instalar el paquete BCrypt.Net-Next:
-        // 
+
 
         public async Task<User> Register(CreateUserDto createUserDto)
         {
@@ -48,9 +59,70 @@ namespace Ecommerce.Api.Repository
             return user;
         }
 
-        public Task<UserLoginResponseDto> Login(UserLoginDto userLoginDto)
+        public async Task<UserLoginResponseDto> Login(UserLoginDto userLoginDto)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(userLoginDto.Username) || string.IsNullOrWhiteSpace(userLoginDto.Password))
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    Message = "El Username y contraseña son requeridos",
+                    User = null
+                };
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync<User>(u => u.Username.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
+
+            if (user == null)
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    Message = "Username no encontrado",
+                    User = null
+                };
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.Password))
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    Message = "Credenciales incorrectas",
+                    User = null
+                };
+            }
+
+            var handlerToken = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(secretKey!);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim("id", user.Id.ToString()),
+                    new Claim("username", user.Username!),
+                    new Claim(ClaimTypes.Role, user.Role!)
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = handlerToken.CreateToken(tokenDescriptor);
+
+            return new UserLoginResponseDto()
+            {
+                Token = handlerToken.WriteToken(token),
+                User = new UserRegisterDto()
+                {
+                    Username = user.Username,
+                    Name = user.Name,
+                    Role = user.Role,
+                    Password = user.Password ?? ""
+                },
+                Message = "Login exitoso"
+            };
+
+
         }
 
     }

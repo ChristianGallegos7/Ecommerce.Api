@@ -6,6 +6,7 @@ using AutoMapper;
 using Ecommerce.Api.Models;
 using Ecommerce.Api.Models.Dtos;
 using Ecommerce.Api.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -28,6 +29,7 @@ namespace Ecommerce.Api.Controllers
             _mapper = mapper;
         }
 
+        [Authorize]
         [HttpGet("GetProducts", Name = "GetProducts")]
         public IActionResult GetProducts()
         {
